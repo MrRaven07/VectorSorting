@@ -1,3 +1,0 @@
-Am implementat binary selection sort
-Am rezolvat cu click-urile in meniu
-Am facut ca TimePerFrame-ul sa se schimbe in functie de rotita mouse-ului, iar daca este apasata, se intoarce la 60fps.
