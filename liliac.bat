@@ -1,25 +1,20 @@
 :main
     call :compileMain
-    call :compileHeader
     call :link
     call :run
     call :delete
 exit /b
 
 :compileMain
-	g++ -c main.cpp -IP:\Aps\SFML\SFML-2.6.0\include 
-exit /b
-
-:compileHeader
-	g++ -c FunctionsClass.cpp -IP:\Aps\SFML\SFML-2.6.0\include  
+	g++ -c ajutor.cpp -IP:\Aps\SFML\SFML-2.6.0\include 
 exit /b
 
 :link
-	g++ -o main.exe main.o FunctionsClass.o -LP:\Aps\SFML\SFML-2.6.0\lib -lsfml-graphics -lsfml-window -lsfml-system
+	g++ -o ajutor.exe ajutor.o -LP:\Aps\SFML\SFML-2.6.0\lib -lsfml-graphics -lsfml-window -lsfml-system
 exit /b
 
 :run
-    .\main.exe
+    .\ajutor.exe
 
 :delete
     del FunctionsClass.o

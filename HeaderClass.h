@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <stdlib.h>
 #include <time.h>
 #include <windows.h>
@@ -15,19 +16,30 @@ class game {
     private:
 
     bool isFull;
-    sf::View view;
+    bool isMuted;
+
+
+    sf::Image icon;
+    
 
     int screenWidth;
     int screenHeight;
     int widthC;
     int heightC;
     sf::RenderWindow mwindow;
+    int curPositionX = mwindow.getPosition().x;
+    int curPositionY = mwindow.getPosition().y;
+
 
 
     sf::Clock clock;
     sf::Time TimePerFrame;
 
-
+    float normalPitch;// care e 1
+    sf::SoundBuffer buffer;
+    sf::Sound bipS;
+    float sonor; // 1.f
+    void PlayBip(int ii);
 
     char CeSortare[101][101]=
     {
@@ -78,9 +90,11 @@ class game {
         L"Merge Sort - Sortarea prin îmbinare este un algoritm de sortare care urmează abordarea împărțiți și cuceriți. \nFuncționează prin împărțirea recursivă a matricei de intrare în subregii mai mici \nși sortarea acelor subgrupuri, apoi îmbinându-le înapoi împreună pentru a obține \nmatricea sortată."
     };
     sf::Text FPSText;
+    void ShowFPSText();
     int limita; // echivalent cu n
     int vector[1001]; // echivalent cu v[]
     int culori[1001]; // puteam sa creez o structura care sa le cuprinda pe ambele
+    void AssignCulori(int ii, int icol, int jj, int jcol);
     std::map<int,int> culoriM;
     std::list<unsigned short int> culoriVechi;
     sf::RectangleShape linie;
@@ -100,6 +114,7 @@ class game {
     void MergeSort();
     void MergeSortRecursiv(int tmp[], int st, int dr);
     void ToggleFullscreen();
+    void ToggleMute();
     void renderer();
     void update();
 

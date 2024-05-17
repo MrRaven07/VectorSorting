@@ -1,8 +1,17 @@
 #include "HeaderClass.h"
 
 game::game(int width_, int height_) : mwindow(sf::VideoMode(width_, height_), "VectorSorting", sf::Style::None )  {
+
+
         widthC = width_;
         heightC = height_;
+
+
+        if (!icon.loadFromFile("icon/VectorSorting256x256.png")) {
+            std::cerr<<"EROAREICONITA\n";
+        }
+        mwindow.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
+
 
         TimePerFrame=sf::seconds(1.f / 60.f);
 
@@ -16,7 +25,14 @@ game::game(int width_, int height_) : mwindow(sf::VideoMode(width_, height_), "V
         screenHeight = sf::VideoMode::getDesktopMode().height;
         
 
-
+        if (!buffer.loadFromFile("Sounds/bip.wav"))
+        {
+            std::cerr << "EROAREAUDIO\n";
+        }
+        sonor = 10.f;
+        bipS.setBuffer(buffer);
+        bipS.setVolume(sonor);
+        normalPitch = bipS.getPitch(); // care e 1
 
         limita=100;
         inaltimeFraction=0.7;
@@ -140,6 +156,26 @@ void game::handlePlayerInput(sf::Keyboard::Key key, bool isPressed){
     if(key == sf::Keyboard::F11){
         ToggleFullscreen();
     }
+    
+    if(key == sf::Keyboard::Z){
+        ToggleMute();
+    }
+    return;
+}
+
+void game::ToggleMute(){
+    isMuted= !(isMuted);
+    if(isMuted==1){
+        bipS.setVolume(0.f);
+    }
+    if(isMuted==0){
+        bipS.setVolume(5.f);
+    }
+}
+
+void game::PlayBip(int ii){
+    bipS.setPitch(normalPitch+(ii/100.f));
+    bipS.play();  
     return;
 }
 
@@ -147,16 +183,15 @@ void game::handlePlayerInput(sf::Keyboard::Key key, bool isPressed){
 // Functie pentru a comuta intre modurile fullscreen/windowed
 void game::ToggleFullscreen() {
     isFull = !(isFull);
-    // if(isFull==1)
-    //     view.reset(sf::FloatRect(0, 0, screenWidth, screenHeight));
-    // else
-    //     view.reset(sf::FloatRect(0, 0, widthC, heightC));
-    // mwindow.setView(view);
-    if(isFull==1)
+    
+    if(isFull==1){
+        mwindow.setPosition(sf::Vector2i(0, 0));
         mwindow.setSize(sf::Vector2u(screenWidth, screenHeight));
-    if(isFull==0)
+    }
+    if(isFull==0){
+        mwindow.setPosition(sf::Vector2i(curPositionX, curPositionY));
         mwindow.setSize(sf::Vector2u(widthC, heightC));
-
+    }
     return;
 }
 
@@ -274,7 +309,7 @@ void game::update(){
 
 
         WaitingTime(); // for fps
-
+        ShowFPSText();
 
         switch(whichMode){
             case 0:
@@ -369,14 +404,15 @@ void game::vectorInit(){
 
 
 void game::WaitDisplayVector(int modeRightNow){
-    // modeRightNow=whichMode;
-    
     int ii=1;
     while(mwindow.isOpen() && modeRightNow == whichMode){
-        if(ii<=limita)
-            culori[ii]=3;
+        WaitingTime();
+        if(ii<=limita){
+            culori[ii++]=3;
+            PlayBip(ii);
+            VectorOutputFunction();
+        }
         processEvents();
-        VectorOutputFunction();
     }
 
     return;
@@ -403,12 +439,6 @@ void game::WaitingTime(float adjustTime){
     sf::Time timeSinceLastUpdate;
     timeSinceLastUpdate = sf::Time::Zero;
 
-    //CE SE INTAMPLA AICI, TREBUIE SA SE INTAMPLE GLOBAL
-    std::cerr << std::to_string(1/TimePerFrame.asSeconds()) << '\n';
-    FPSText.setString(std::to_string(1/TimePerFrame.asSeconds()));
-    mwindow.draw(FPSText);
-    //CE SE INTAMPLA AICI, TREBUIE SA SE INTAMPLE GLOBAL
-
 
     // TIMPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
     FPSIncreaser:
@@ -424,124 +454,28 @@ void game::WaitingTime(float adjustTime){
     return;
 }
 
+void game::ShowFPSText(){
+    FPSText.setString(std::to_string(1/TimePerFrame.asSeconds()));
+    mwindow.draw(FPSText);
+}
 
 
 void game::VectorOutputFunction(){
     mwindow.clear();
+    ShowFPSText();
+
     int tallness;
-
-
-    /*
-        Vreau sa pun vectorul in mijloc
-        Pentru asta trebuie sa stiu cat de mare e vectorul (limita), inaltimea (height) si latimea (width)
-        Si trebuie sa folosesc capul
-
-        Daca vreau sa fie in mijloc, inseamna ca in mijloc mijloc, trebuie sa fie termenul din mijloc al vectorului, iar cel mai din stanga
-        50 de pozitii mai in stanga, iar cel mai din dreapta, 50 de pozitii mai in dreapta. Ar trebui sa fie simplu, nu?
-   
-        Also, inaltimea liniilor trebuie sa fie proportionala cu dimensiunile ecranului
-    */
-
     int farLeft=0;
     int mijlocVector=limita/2;
     int farRight=limita;
     int distantaIntrePeretiiDinStanga = 10; 
-    // mai bine zis, distanta intre partea din stanga a unei linii si partea din stanga a liniei vecine (adica cuprinde si latimea, in exemplul curent fiind 5 si 5)
 
-    /*
-        Elementul din mijloc, il afisez la width/2, asa ca farleft, la ------ .... 
-        Se complica situatia, ca trebuie sa iau in calcul si marginile si distanta dintre elemente
-        
-        inaltimeLinie => inaltimea liniei 1
-        latimeLinie => latimea liniei 5
-    
-    
-    
-        linie.setPosition(widthC/100 + i * 10, heightC-heightC/10-tallness);
-        Asta este/a fost codul care seta pozitia. It'a a mess, dar merge
-
-        Din asta stim ca distanta dintre 2 linii, este de:
-        
-        latime = 5
-        i * 10 => adica cate 10 intre fiecare
-    
-                    =====>>>>> Din asta rezulta ca, intre partea din stanga a unei linii si partea din stanga a liniei vecine (din dreapta) este de 15
-                    Distanta dintre partea din dreapta a unei linii si partea din stanga a unei linii vecine (din dreapta acesteia) este de 10 (adica i*10)
-
-                    Ceea ce rezulta ca 
-                    trebuie sa ma misc in stanga cu
-                    width/2 - 10 * limita/2
-
-                    In cazul curent
-                    width = 1280
-                    width/2 = 640 // mijlocul ecranului
-                    
-                    limita = 100 // numarul de elemente din vector
-                    10 * limita/2 = 500
-
-                    =>>>> adica din calcule, in cazul curent:
-                    linia din mijloc va fi la coordonata x=640
-                    iar cea din farleft, la x = 640-500 = 140
-
-                                            dar nu am luat in calcul grosimea (latimea fiecarei linii)
-                                            
-                                            in partea din stanga ar fi 49/50 de linii. deci se adauga 49 * latimeLinie ( 5*49 = 245 )
-                                            deci trebuie sa incapa 245 de pixeli in partea stanga + 
-
-                    ....
-
-
-                    Am gresit, caci, distantaIntreLinii, cuprinde latimea liniilor 
-                    (adica in exemplul curent, din 10 pixeli, 5 sunt alocati pentru latime, iar ceilalti 5, distanta)
-
-
-        Asa ca se pastreaza prima idee
-        width/2 - distantaIntrePeretiiDinStanga * limita/2
-        adica 640-500 = 140
-        si se va afisa din 10 in 10 cate o linie
-        adica 5 pixeli o linie, spatiu 5 pixeli, 5 pixeli alta linie...
-        adica:
-        140 + 5 * 2 * 50 = 640
-
-        iar in partea din dreapta
-
-        width/2 + distantaIntrePeretiiDinStanga * limita/2
-        adica se va opri la 
-        640 + 10 * 50 = 1140
-
-
-        deci, de la sata se porneste
-        ( width/2 - distantaIntrePeretiiDinStanga * limita/2 ) + i * distantaIntrePeretiiDinStanga
-    */
-
-
-    /*
-        Acum pentru inaltime:
-        Vreau sa apara mai jos, adica Y-ul, va fi destul de ridicat
-        
-        Inainte este/era asta pentru pozitia Y:
-            heightC-heightC/10-tallness
-            1080 - 1080/10 - i * 8,64
-                pentru i = 1 =>>> 963.36
-        
-        adica pornea de la 9/10 , adica putea fi rescrisa ca, (heightC * 9 / 10)-tallness
-            // 0.9 * 1080 - i * 8,64
-            1080 * 9/10 - i * 8,64
-                pentru i = 1 =>>> 963.36
-
-    
-    */
 
     for(int i=1;i<=limita;i++){           
         tallness = vector[i] * (heightC / 125) * inaltimeFraction;
         linie.setSize(sf::Vector2f( latimeLinie , tallness ));
-        
         linie.setPosition( ( widthC/2 - distantaIntrePeretiiDinStanga * limita/2 ) + i * distantaIntrePeretiiDinStanga , (heightC * 9 / 10)-tallness); 
-        // aparent cand se afiseaza, se afiseaza din dreapta sus
-        // de aceea trebuie sa ne asiguram de la inaltime afisam
-        // de la inaltimea maxima - inaltimeLinie ( inaltimeLinie fiind inaltimea fiecarei linii)
         
-
         switch(culori[i]){
             case 1: // alb
             linie.setFillColor(sf::Color(255,255,255));
@@ -571,21 +505,30 @@ void game::VectorOutputFunction(){
             linie.setFillColor(sf::Color(0, 255, 225));
             break;
         }
-
-
         CeSortareText.setString(CeSortare[whichMode-10]);
         CeSortareText.setPosition(widthC/2 - (CeSortareText.getLocalBounds().width / 2 ) , heightC - ( CeSortareText.getLocalBounds().height*2 ) );
         mwindow.draw(CeSortareText);
-        /*
-            widthC/2 - (CeSortareText.getLocalBounds().width / 2 ) 
-                "widthC/2" pentru ca vreau sa fie la mijloc
-                " - (CeSortareText.getLocalBounds().width / 2 )" pentru ca trebuie sa fie si textul centrat,
-                " CeSortareText.getLocalBounds().width / 2 ", iar /2 apare pentru ca incepe sa scrie de la jumatatea necesara...
-        */
-
         mwindow.draw(linie);
     }
     mwindow.display();
+    return;
+}
+
+void game::AssignCulori(int ii, int icol, int jj, int jcol){
+    static int iTrecut;
+    static int jTrecut;
+
+    culori[iTrecut]=1;
+    culori[jTrecut]=1;
+
+    culori[ii]=icol;
+    culori[jj]=jcol;
+    PlayBip(ii);
+    PlayBip(jj);
+
+    iTrecut=ii;
+    jTrecut=jj;
+
     return;
 }
 void game::SelectionSort(){
@@ -608,27 +551,30 @@ void game::SelectionSort(){
             if( !(mwindow.isOpen()) || whichMode!=11 ) //if the window is not open
                 goto SelectionClosed;
             
-            culori[iTrecut]=1;
-            culori[jTrecut]=1;
+            // culori[iTrecut]=1;
+            // culori[jTrecut]=1;
             if(vector[i]>vector[j]){
-                iTrecut=i;
-                jTrecut=j;
-                culori[i]=3;
-                culori[j]=3;
+                // iTrecut=i;
+                // jTrecut=j;
+                // culori[i]=3;
+                // culori[j]=3;
+                AssignCulori(i, 3, j, 3);
+
 
                 std::swap(vector[i], vector[j]);
             }
             else{
-                iTrecut=i;
-                jTrecut=j;
-                culori[i]=2;
-                culori[j]=2;
+                // iTrecut=i;
+                // jTrecut=j;
+                // culori[i]=2;
+                // culori[j]=2;
+                AssignCulori(i, 2, j, 2);
             }
             VectorOutputFunction();
-        }
+        } 
 
-        culori[iTrecut]=1;
-        culori[jTrecut]=1;
+        AssignCulori(0, 1, 0, 1);
+
 
         WaitDisplayVector(11);
 
@@ -660,21 +606,25 @@ void game::SelectionSort(){
                         std::swap(vector[i], vector[i+1]);
                         sortat=1;
 
-                        culori[iTrecut]=1;
-                        culori[iPlusUnuTrecut]=1;
-                        iTrecut=i;
-                        iPlusUnuTrecut=i+1;
-                        culori[i]=3;
-                        culori[i+1]=3;
+                        // culori[iTrecut]=1;
+                        // culori[iPlusUnuTrecut]=1;
+                        // iTrecut=i;
+                        // iPlusUnuTrecut=i+1;
+                        // culori[i]=3;
+                        // culori[i+1]=3;
+
+                        AssignCulori(i, 3, i+1, 3);
 
                     }
                     else {
-                        culori[iTrecut]=1;
-                        culori[iPlusUnuTrecut]=1;                    
-                        culori[i]=2;
-                        culori[i+1]=2;
-                        iTrecut=i;
-                        iPlusUnuTrecut=i+1;
+                        // culori[iTrecut]=1;
+                        // culori[iPlusUnuTrecut]=1;                    
+                        // culori[i]=2;
+                        // culori[i+1]=2;
+                        // iTrecut=i;
+                        // iPlusUnuTrecut=i+1;
+                        AssignCulori(i, 2, i+1, 2);
+
                     }
                 
                 VectorOutputFunction();
@@ -703,7 +653,7 @@ void game::SelectionSort(){
         
         for(int i=2;i<=limita;i++){
             int j,key;
-            key=vector[i];
+            key = vector[i];
             j = i - 1;
 
             while(j >= 1 && vector[j]>key){
@@ -712,23 +662,27 @@ void game::SelectionSort(){
 
                 vector[j+1]=vector[j];
 
-                culori[jTrecut]=1;                
-                culori[jPlusUnuTrecut]=1;                
-                culori[j]=3;
-                culori[j+1]=3;
-                jTrecut=j;
-                jPlusUnuTrecut=j+1;
+                // culori[jTrecut]=1;                
+                // culori[jPlusUnuTrecut]=1;                
+                // culori[j]=3;
+                // culori[j+1]=3;
+                // jTrecut=j;
+                // jPlusUnuTrecut=j+1;
+
+                AssignCulori(j, 3, j+1, 3);
 
                 j = j - 1;
                 WaitingTime();
                 VectorOutputFunction();
             }
-            culori[jTrecut]=1;                
-            culori[jPlusUnuTrecut]=1;   
-            culori[j] = 2;
-            culori[j+1] = 2;
-            jTrecut=j;
-            jPlusUnuTrecut=j+1;
+            // culori[jTrecut]=1;                
+            // culori[jPlusUnuTrecut]=1;   
+            // culori[j] = 2;
+            // culori[j+1] = 2;
+            // jTrecut=j;
+            // jPlusUnuTrecut=j+1;
+
+            AssignCulori(j, 2, j+1, 2);
 
             WaitingTime();
             VectorOutputFunction();
@@ -754,8 +708,6 @@ void game::SelectionSort(){
         if(!(mwindow.isOpen()) || whichMode!=14){
             goto BinInsertionClosed;
         }
-
-
 
         for(int i=2;i<=limita;i++){
             WaitingTime();
@@ -849,12 +801,21 @@ void game::SelectionSort(){
             //Interclasare
             int i = st, j = m + 1, k = 0;
 
-            while( i <= m && j <= dr )
-                if(vector[i] < vector[j])
+            while( i <= m && j <= dr ){
+                if(vector[i] < vector[j]){
                     tmp[++k] = vector[i++];
-                else
+                    AssignCulori(i, 3, j, 1);
+                }
+                else{
                     tmp[++k] = vector[j++];
+                    AssignCulori(i, 1, j, 2);
 
+                }
+
+                WaitingTime();
+                VectorOutputFunction();
+                
+            }
             while(i <= m)
                 tmp[++k] = vector[i++];
 
