@@ -6,13 +6,10 @@
 #include <windows.h> 
 #include "HeaderClass.h"
 
-int main()
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     // int wid= sf::VideoMode::getDesktopMode().width;
     // int hei= sf::VideoMode::getDesktopMode().height;
-
-
-
 
     int widthS = 1280;
     int heightS = 720;

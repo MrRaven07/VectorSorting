@@ -21,7 +21,7 @@ class game {
 
     sf::Image icon;
     
-
+    sf::Vector2f fullscreenNormalRatio;
     int screenWidth;
     int screenHeight;
     int widthC;
@@ -84,7 +84,7 @@ class game {
     wchar_t PatrateText[10][500] = {
         L"",
         L"Selection Sort - Algoritmul selectează în mod repetat cel mai mic (sau cel mai mare) element \ndin porțiunea nesortată a listei și îl schimbă cu primul element al părții nesortate. Acest proces \nse repetă pentru porțiunea rămasă nesortată până când întreaga listă este sortată.",
-        L"Bubble Sort - Bubble Sort este cel mai simplu algoritm de sortare care funcționează prin schimbarea în mod \nrepetat a elementelor adiacente dacă acestea sunt în ordinea greșită. Acest algoritm nu \neste potrivit pentru seturi mari de date, deoarece complexitatea sa medie și în \ncel mai rău caz este destul de mare.",
+        L"Bubble Sort - Bubble Sort este cel mai simplu algoritm de sortare care funcționează prin schimbarea în mod \nrepetat a elementelor adiacente dacă acestea sunt în ordinea greșită. Acest algoritm nu \neste potrivit pentru seturi mari de date, deoarece complexitatea sa medie \neste destul de mare.",
         L"Insertion Sort - Sortarea prin inserare este un algoritm simplu de sortare care funcționează prin inserarea \niterativă a fiecărui element dintr-o listă nesortată în poziția sa corectă într-o \nporțiune sortată a listei. Este un algoritm de sortare stabil, ceea ce înseamnă că \nelementele cu valori egale își mențin ordinea relativă în rezultatul sortat.",
         L"Binary Insertion Sort - Sortarea prin inserție binară este un algoritm de sortare care este similar cu sortarea \nprin inserție, dar în loc să folosim căutarea liniară pentru a găsi locația în \ncare ar trebui să fie inserat un element, folosim căutarea binară. Astfel, reducem \nvaloarea comparativă a inserării unui singur element de la O(N) la O(log N).",
         L"Merge Sort - Sortarea prin îmbinare este un algoritm de sortare care urmează abordarea împărțiți și cuceriți. \nFuncționează prin împărțirea recursivă a matricei de intrare în subregii mai mici \nși sortarea acelor subgrupuri, apoi îmbinându-le înapoi împreună pentru a obține \nmatricea sortată."

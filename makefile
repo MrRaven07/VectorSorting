@@ -1,14 +1,16 @@
-all: compileMain compileHeader link run 
+all: compileMain compileHeader dynamiclink run 
 
 compileMain:
-	g++ -c main.cpp -IP:\Aps\SFML\SFML-2.6.0\include
+	g++ -c main.cpp -IP:\Aps\SFML\SFML-2.6.1\include
 
 compileHeader:
-	g++ -c FunctionsClass.cpp -IP:\Aps\SFML\SFML-2.6.0\include
+	g++ -c FunctionsClass.cpp -IP:\Aps\SFML\SFML-2.6.1\include
 
 
-link:
-	g++ -o main.exe main.o FunctionsClass.o -LP:\Aps\SFML\SFML-2.6.0\lib -static -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
+dynamiclink:
+	g++ -o main.exe main.o FunctionsClass.o -LP:\Aps\SFML\SFML-2.6.1\lib -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lwinmm -lgdi32 -lsfml-main -mwindows -std=c++17
+staticlink:
+	g++ -o main.exe main.o FunctionsClass.o -LP:\Aps\SFML\SFML-2.6.1\lib -static -lsfml-graphics-s -lsfml-window-s -lsfml-system-s -lsfml-audio-s -lopenal -lsndfile -lwinmm -lgdi32 -lsfml-main -mwindows
 
 run: 
 	./main.exe

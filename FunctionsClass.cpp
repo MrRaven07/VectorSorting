@@ -5,7 +5,7 @@ game::game(int width_, int height_) : mwindow(sf::VideoMode(width_, height_), "V
 
         widthC = width_;
         heightC = height_;
-
+        
 
         if (!icon.loadFromFile("icon/VectorSorting256x256.png")) {
             std::cerr<<"EROAREICONITA\n";
@@ -24,6 +24,8 @@ game::game(int width_, int height_) : mwindow(sf::VideoMode(width_, height_), "V
         screenWidth = sf::VideoMode::getDesktopMode().width;
         screenHeight = sf::VideoMode::getDesktopMode().height;
         
+        fullscreenNormalRatio.x=1;
+        fullscreenNormalRatio.y=1;
 
         if (!buffer.loadFromFile("Sounds/bip.wav"))
         {
@@ -56,12 +58,12 @@ game::game(int width_, int height_) : mwindow(sf::VideoMode(width_, height_), "V
 
 
         EscExit.setFont(RobotoFont);
-        EscExit.setString("Apasa \"Esc\" pentru a inchide programul");
+        EscExit.setString(L"Apasă \"Esc\" pentru a închide programul");
         EscExit.setCharacterSize(24);
         EscExit.setFillColor(sf::Color(255, 255, 255));
         
         MMenu.setFont(RobotoFont);
-        MMenu.setString("Apasa Tastele:\n\"M\" pentru a ajunge in meniul actual \n1 pentru a vedea Selection Sort \n2 pentru a vedea Bubble Sort \n3 pentru a vedea Insertion Sort \n4 pentru a vedea Binary Insertion Sort \n5 pentru a vedea Merge Sort");
+        MMenu.setString(L"Apasă Tastele:\n\"M\" pentru a ajunge în meniul actual \nF11 pentru a face fereastra Fullscreen\nFolosiți Scroll-ul Mouse-ului pentru a derula \nmai încet sau mai rapid programul\n1 pentru a vedea Selection Sort \n2 pentru a vedea Bubble Sort \n3 pentru a vedea Insertion Sort \n4 pentru a vedea Binary Insertion Sort \n5 pentru a vedea Merge Sort");
         MMenu.setCharacterSize(24);
         MMenu.setFillColor(sf::Color(255, 255, 255));
         
@@ -75,17 +77,16 @@ game::game(int width_, int height_) : mwindow(sf::VideoMode(width_, height_), "V
         FPSText.setPosition(widthC*0.5, heightC*0.01);
 
 
-        numarSortari=8;
+        numarSortari=5;
         patrateMeniuDimensiune.x=50;
         patrateMeniuDimensiune.y=50;
         patrateMeniu.setSize(patrateMeniuDimensiune);
-        // patrateMeniu.setOutlineThickness(5);
-        // patrateMeniu.setOutlineColor(sf::Color(255,255,255));
-        patrateMeniu.setPosition(widthC/4, heightC/2);
+    
+        sf::Vector2i pozitiePatratInceput(widthC / 2.5, heightC / 3);
         patrateMeniu.setFillColor(sf::Color(255,255,255));
         for(int i=0;i<numarSortari;i++){
-            patrateMeniuVector[i].x=widthC/4 + i * 60;
-            patrateMeniuVector[i].y=heightC/3;
+            patrateMeniuVector[i].x=pozitiePatratInceput.x + i * 60;
+            patrateMeniuVector[i].y=pozitiePatratInceput.y;
         }
         PatrateTextSFML.setFont(RobotoFont);
         PatrateTextSFML.setCharacterSize(24);
@@ -187,11 +188,20 @@ void game::ToggleFullscreen() {
     if(isFull==1){
         mwindow.setPosition(sf::Vector2i(0, 0));
         mwindow.setSize(sf::Vector2u(screenWidth, screenHeight));
+
+        fullscreenNormalRatio.x = 1.f*screenWidth/widthC;
+        fullscreenNormalRatio.y = 1.f*screenHeight/heightC;
+        
+
     }
     if(isFull==0){
         mwindow.setPosition(sf::Vector2i(curPositionX, curPositionY));
         mwindow.setSize(sf::Vector2u(widthC, heightC));
+
+        fullscreenNormalRatio.x = 1;
+        fullscreenNormalRatio.y = 1;
     }
+
     return;
 }
 
@@ -236,18 +246,13 @@ void game::processEvents(){
             case sf::Event::MouseWheelScrolled:
                 int secToMicro=1e6; // 1 second = 1e6 microseconds
                 short int delta = (event.mouseWheelScroll.delta < 0) ? 1 : -1;
-                int adjustTime = (secToMicro / 60); // 16 666 microsecunde - echivalentul a 0.01666 secunde
-                adjustTime = adjustTime * 0.05;
+
+                float FPSPrezent = 1/TimePerFrame.asSeconds();
+                float adjustTime = (secToMicro / FPSPrezent / FPSPrezent); 
+                
                 adjustTime = adjustTime * delta;
                 int timpFinal = TimePerFrame.asMicroseconds()+adjustTime;
-                // std::cerr << TimePerFrame.asMicroseconds() << ' ' << adjustTime << '\n';
-                std::cerr << timpFinal << '\n';
-                std::cerr << 1.f * timpFinal/secToMicro << "\n\n";
-                
-                // 1e7, 1 secunda = 1e6 microsec
-                // 0.0166 secunde = 
-                // break;
-                if(0<timpFinal && timpFinal<=100000)
+                if(0<timpFinal && timpFinal<=1000000)
                     TimePerFrame = sf::microseconds(timpFinal);
                 
             break;  
@@ -265,17 +270,21 @@ void game::processEvents(){
 
 
 void game::MouseCheckMeniu(int mouseX, int mouseY, bool click){
-    if(patrateMeniuVector[0].x<=mouseX && 
-    mouseX <= (patrateMeniuVector[numarSortari-1].x + patrateMeniuDimensiune.x )&& //-1 pentru ca lista incepe de la 0
-    patrateMeniuVector[0].y<=mouseY && 
-    mouseY <= (patrateMeniuVector[numarSortari-1].y + patrateMeniuDimensiune.y)
+
+    /*
+    Imi pare rau pentru variabila fullscreenNormalRatio, insa, cand se face fullscreen, se schimba ratio-ul
+    si trebuie sa se in considerare pentru coliziunea mouseului cu patratele
+    */
+    if(patrateMeniuVector[0].x * fullscreenNormalRatio.x <=mouseX && 
+    mouseX <= ( (patrateMeniuVector[numarSortari-1].x + patrateMeniuDimensiune.x )*fullscreenNormalRatio.x )&& //-1 pentru ca lista incepe de la 0
+    patrateMeniuVector[0].y * fullscreenNormalRatio.y<=mouseY && 
+    mouseY <= ((patrateMeniuVector[numarSortari-1].y + patrateMeniuDimensiune.y)*fullscreenNormalRatio.y)
     )
     {   
         
         for(int i=0;i<numarSortari;i++){
-
-            if(patrateMeniuVector[i].x <= mouseX &&
-            mouseX <= (patrateMeniuVector[i].x + patrateMeniuDimensiune.x) 
+            if(patrateMeniuVector[i].x * fullscreenNormalRatio.x <= mouseX &&
+            mouseX <= ( (patrateMeniuVector[i].x + patrateMeniuDimensiune.x) * fullscreenNormalRatio.x )
             )
             {
                 PatrateTextState=1+i; // +1 pentru ca i incepe de la 0, iar prima sortare este la pozitia 11
@@ -286,15 +295,10 @@ void game::MouseCheckMeniu(int mouseX, int mouseY, bool click){
                     goto MouseCheckMeniuClosed;
                 }
                 goto MouseCheckMeniuClosed;
-
             }
         }
-        
-
     }
-    
     PatrateTextState=0;
-
     MouseCheckMeniuClosed:
     return;
 }
@@ -309,7 +313,6 @@ void game::update(){
 
 
         WaitingTime(); // for fps
-        ShowFPSText();
 
         switch(whichMode){
             case 0:
@@ -322,6 +325,8 @@ void game::update(){
             break;
 
             case 1: // menu
+            
+                ShowFPSText();
                 mwindow.draw(MMenu);
                 mwindow.draw(EscExit);
 
@@ -341,14 +346,12 @@ void game::update(){
 
             break;
 
-
-
-            case 11: //whichmode este 11
+            case 11:
                 SelectionSort();
             break;
 
 
-            case 12: //whichmode este 12
+            case 12:
                 BubbleSort();
             break;
 
@@ -497,8 +500,8 @@ void game::VectorOutputFunction(){
             linie.setFillColor(sf::Color(255, 94, 0));
             break;
 
-            case 6: // mov
-            linie.setFillColor(sf::Color(255, 94, 0));
+            case 6: // albastru inchis deschis
+            linie.setFillColor(sf::Color(66, 88, 255));
             break;
 
             case 7: // albastru deschis
@@ -634,12 +637,12 @@ void game::SelectionSort(){
             newLimit--;
         }while(sortat==1);
         
-        culori[iTrecut]=1;  
-        culori[iPlusUnuTrecut]=1;  
+        AssignCulori(0, 1, 0, 1);
+
 
         WaitDisplayVector(12);
 
-        whichMode=1; // revenire din planul oniric
+        whichMode=1;
         BubbleClosed:
         return;
     }
@@ -703,7 +706,7 @@ void game::SelectionSort(){
     void game::BinaryInsertionSort(){
         vectorInit();
 
-        int culoareTrecut=0;
+        int midTrecut=0;
         
         if(!(mwindow.isOpen()) || whichMode!=14){
             goto BinInsertionClosed;
@@ -720,21 +723,17 @@ void game::SelectionSort(){
             int item = vector[i];
             int low=0, high=j;
             
-            culori[0]=5; // portocaliu
-            culori[j]=6; // mov
 
             // Binary Search
             while (low <= high) {
-                WaitingTime();
-                VectorOutputFunction();
-                culori[culoareTrecut]=1;
+                culori[midTrecut]=1;
 
                 if(!(mwindow.isOpen()) || whichMode!=14)
                     goto BinInsertionClosed;
 
                 int mid = low + (high - low) / 2;
-                culoareTrecut = mid;
-                culori[culoareTrecut]=7;
+            
+
                 if (item == vector[mid]){
                     loc = mid + 1;
                     goto endSearch;
@@ -743,10 +742,17 @@ void game::SelectionSort(){
                     low = mid + 1;
                 else
                     high = mid - 1;
-                    
+                
+                culori[mid]=7;
+                AssignCulori(low, 5, high, 6);
+                midTrecut = mid;
+                
+                WaitingTime();
+                VectorOutputFunction();
+
             }
-            culori[0]=1;
-            culori[j]=1;
+            AssignCulori(0, 1, 0, 1);
+            PlayBip(j);
             loc = low;
             endSearch:
             // Binary Search
@@ -754,16 +760,17 @@ void game::SelectionSort(){
             while(j >= loc) {
                 vector[j+1] = vector[j];
                 j--;
-                VectorOutputFunction();
             }
 
 
             vector[j+1] = item;
+
+            WaitingTime();
             VectorOutputFunction();
 
         }
 
-
+        culori[1]=1;
         WaitDisplayVector(14);
 
         BinInsertionClosed:
@@ -795,8 +802,14 @@ void game::SelectionSort(){
                     goto MergeSortClosed;
 
             MergeSortRecursiv(tmp, st , m);
+
+                if(!(mwindow.isOpen()) || whichMode!=15)
+                    goto MergeSortClosed;
+
             MergeSortRecursiv(tmp, m + 1 , dr);
 
+                if(!(mwindow.isOpen()) || whichMode!=15)
+                    goto MergeSortClosed;
 
             //Interclasare
             int i = st, j = m + 1, k = 0;
@@ -809,13 +822,14 @@ void game::SelectionSort(){
                 else{
                     tmp[++k] = vector[j++];
                     AssignCulori(i, 1, j, 2);
-
                 }
 
                 WaitingTime();
                 VectorOutputFunction();
                 
             }
+            AssignCulori(0, 1, 0, 1);
+
             while(i <= m)
                 tmp[++k] = vector[i++];
 
@@ -825,8 +839,7 @@ void game::SelectionSort(){
             for(i = st , j = 1 ; i <= dr ; i ++ , j ++)
                 vector[i] = tmp[j];
             
-            VectorOutputFunction();
-            WaitingTime();
+            
 
 	    }
         MergeSortClosed:
