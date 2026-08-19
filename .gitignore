@@ -1,0 +1,14 @@
+# Compiled Object files
+*.o
+
+# Executables
+*.exe
+
+# Dynamic Link Libraries 
+*.dll
+
+
+
+compilerAndLibraries/
+bin/
+release/
