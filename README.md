@@ -27,6 +27,14 @@ Urmatorul pas este de a scapa de dependintele legate de windows, astfel incat sa
 
 ---
 
+## Releases:
+
+Versiunea compilata pentru windows:
+
+[VectorSorting_v1.0.0](https://github.com/MrRaven07/VectorSorting/releases)
+
+---
+
 ## Cerinte de sistem pentru compilare
 
 Pentru a compila si rula acest proiect, sunt necesare urmatoarele:
