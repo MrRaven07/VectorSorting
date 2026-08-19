@@ -12,3 +12,6 @@
 compilerAndLibraries/
 bin/
 release/
+
+
+.vscode/
